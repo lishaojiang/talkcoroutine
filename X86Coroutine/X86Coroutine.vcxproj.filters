@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="inc">
+      <UniqueIdentifier>{e81e3db5-6ab0-4987-81e6-ee76889d1fe1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{cbd46aeb-8117-4ceb-9326-0d036042c62b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="core.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="coroutine.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="fun.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="funenv.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="coroutine.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="fun.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="core.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
