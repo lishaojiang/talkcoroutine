@@ -16,7 +16,7 @@ __declspec(naked) void __stdcall CoroutineExec(FunEnvInfoPtr infoPtr)
 	{
 		// compare last save eip empty
 		mov eax, [esp + 4]
-		cmp [eax], 0
+		cmp [eax]FunEnvInfo.reEIP, 0
 
 		// protect some use regs
 		push ebp
@@ -40,31 +40,31 @@ __declspec(naked) void __stdcall CoroutineExec(FunEnvInfoPtr infoPtr)
 		mov ebp, esp
 
 		// 3.calculate stack size
-		sub esp, [eax + 40]
+		sub esp, [eax]FunEnvInfo.iStackSize
 
 		// 4.copy memory
 
 		mov edi, esp
-		mov esi, [eax + 44]
-		mov ecx, [eax + 40]
+		mov esi, [eax]FunEnvInfo.pStackMem
+		mov ecx, [eax]FunEnvInfo.iStackSize
 		rep movsb
 
 		// 5.setup common regs
-		mov ebx, [eax + 16]
-		mov ecx, [eax + 20]
-		mov edx, [eax + 24]
-		mov esi, [eax + 28]
-		mov edi, [eax + 32]
+		mov ebx, [eax]FunEnvInfo.reEBX
+		mov ecx, [eax]FunEnvInfo.reECX
+		mov edx, [eax]FunEnvInfo.reEDX
+		mov esi, [eax]FunEnvInfo.reESI
+		mov edi, [eax]FunEnvInfo.reEDI
 
 		// 6.jum EIP
-		mov eax, [eax + 0]
+		mov eax, [eax]FunEnvInfo.reEIP
 		jmp eax
 
 
 		FIRSTEXCFUNCTION:
 		// prepare function param and function addresss
 		push eax
-		mov eax, [eax + 48];
+		mov eax, [eax]FunEnvInfo.pfCallFun
 
 		// call the function
 		call eax
@@ -100,13 +100,13 @@ __declspec(naked) void __stdcall CoroutineBreak(FunEnvInfoPtr infoPtr)
 		// save some parent function regs
 		// we must save ebx,edx,esi,edi
 		mov eax, [esp + 4]
-		mov [eax + 4], esp
-		mov [eax + 8], ebp
-		mov [eax + 16], ebx
-		mov [eax + 20], ecx
-		mov [eax + 24], edx
-		mov [eax + 28], esi
-		mov [eax + 32], edi
+		mov [eax]FunEnvInfo.reESP, esp
+		mov [eax]FunEnvInfo.reEBP, ebp
+		mov [eax]FunEnvInfo.reEBX, ebx
+		mov [eax]FunEnvInfo.reECX, ecx
+		mov [eax]FunEnvInfo.reEDX, edx
+		mov [eax]FunEnvInfo.reESI, esi
+		mov [eax]FunEnvInfo.reEDI, edi
 
 		// use esi instead of eax,eax maybe use as function return value
 		mov esi, eax
@@ -115,26 +115,26 @@ __declspec(naked) void __stdcall CoroutineBreak(FunEnvInfoPtr infoPtr)
 		// get the eip and save
 		// it will be jump to eip when the function is called next time
 		mov ecx, [esp]
-		mov [esi + 0], ecx
+		mov [esi]FunEnvInfo.reEIP, ecx
 
 
 		// skip the function ret address and param temp and save esp
-		mov ecx, [esi + 4]
+		mov ecx, [esi]FunEnvInfo.reESP
 		// we must add 8,4 ret,4 param
 		add ecx, 8
-		mov [esi + 4], ecx
+		mov [esi]FunEnvInfo.reESP, ecx
 
 		// calculate stack size of parent function and iStackSize
-		mov edx, [esi + 8]
+		mov edx, [esi]FunEnvInfo.reEBP
 		sub edx,ecx
-		mov [esi + 40], edx
+		mov [esi]FunEnvInfo.iStackSize, edx
 
 		// if the parent function stack is greater than 0, allocate memory to save
 		test edx,edx
 		jle ERROR_PARENT_STACK_SIZE
 
 		// If memory has been allocated, it will not be allocated again
-		mov eax, [esi + 44]
+		mov eax, [esi]FunEnvInfo.pStackMem
 		test eax, eax
 		jne HAS_ALLOCATED_MEMROY
 
@@ -144,7 +144,7 @@ __declspec(naked) void __stdcall CoroutineBreak(FunEnvInfoPtr infoPtr)
 		push edx
 		call dword ptr[malloc]
 		add esp, 4
-		mov[esi + 44], eax
+		mov [esi]FunEnvInfo.pStackMem, eax
 		pop ecx
 		pop edx
 
@@ -164,7 +164,7 @@ __declspec(naked) void __stdcall CoroutineBreak(FunEnvInfoPtr infoPtr)
 		// not the parent function
 		ERROR_PARENT_STACK_SIZE:
 		// calculate parent stack size,skip the self function return address 4 bytes
-		mov eax, [esi + 40]
+		mov eax, [esi]FunEnvInfo.iStackSize
 		add eax, 8
 		// balance the stack
 		add esp, eax
@@ -188,7 +188,7 @@ __declspec(naked) void __stdcall CoroutineEnd(FunEnvInfoPtr infoPtr)
 		// compare whether we need to delete the stack memory
 		push esi
 		mov esi, [esp + 8]
-		mov eax, [esi +44]
+		mov eax, [esi]FunEnvInfo.pStackMem
 		test eax, eax
 		je DO_NOT_DELETE
 
@@ -205,9 +205,9 @@ __declspec(naked) void __stdcall CoroutineEnd(FunEnvInfoPtr infoPtr)
 
 		// clean up some function's FunEnvInfoPtr params
 		// we must use dword ptr for number
-		mov dword ptr[esi + 44], 0
-		mov dword ptr[esi + 40], 0
-		mov dword ptr[esi + 0], 0
+		mov dword ptr[esi]FunEnvInfo.pStackMem, 0
+		mov dword ptr[esi]FunEnvInfo.iStackSize, 0
+		mov dword ptr[esi]FunEnvInfo.reEIP, 0
 
 		DO_NOT_DELETE:
 		pop esi
